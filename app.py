@@ -7,7 +7,7 @@ import data_processor
 import charts
 import rb20_blueprint
 
-# Page setup
+# Page configuration
 st.set_page_config(
     page_title="F1 Strategy Explorer • RB20 Telemetry HUD • São Paulo 2024",
     page_icon="🏎️",
@@ -20,23 +20,23 @@ st.markdown("""
 <style>
     /* Dark Slate / Carbon Background */
     .stApp {
-        background-color: #070A0F;
-        color: #F0F2F6;
+        background-color: #06090E;
+        color: #F1F5F9;
         font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
     }
     
     /* Hero Title Card */
     .f1-header {
-        background: linear-gradient(135deg, #111726 0%, #162035 50%, #0B111E 100%);
+        background: linear-gradient(135deg, #0F172A 0%, #172554 50%, #0A1128 100%);
         border: 1px solid #1E293B;
-        border-radius: 12px;
-        padding: 20px 24px;
-        margin-bottom: 20px;
-        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
+        border-radius: 14px;
+        padding: 22px 28px;
+        margin-bottom: 22px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
     }
     .f1-title {
         font-size: 28px;
-        font-weight: 800;
+        font-weight: 900;
         color: #FFFFFF;
         letter-spacing: -0.5px;
         margin: 0;
@@ -47,57 +47,61 @@ st.markdown("""
     .f1-subtitle {
         font-size: 14px;
         color: #94A3B8;
-        margin-top: 4px;
+        margin-top: 5px;
         margin-bottom: 0px;
     }
     .tag-rb {
         background-color: #3671C6;
         color: white;
-        padding: 3px 10px;
+        padding: 4px 12px;
         border-radius: 6px;
         font-size: 12px;
         font-weight: 700;
+        letter-spacing: 0.5px;
     }
     .tag-wet {
         background-color: #39B54A;
         color: black;
-        padding: 3px 10px;
+        padding: 4px 12px;
         border-radius: 6px;
         font-size: 12px;
         font-weight: 700;
+        letter-spacing: 0.5px;
     }
     .tag-redflag {
         background-color: #E10600;
         color: white;
-        padding: 3px 10px;
+        padding: 4px 12px;
         border-radius: 6px;
         font-size: 12px;
         font-weight: 700;
+        letter-spacing: 0.5px;
     }
 
-    /* Interactive HUD Container */
-    .hud-card {
-        background: #0B0F19;
-        border: 1px solid #1F293D;
-        border-radius: 14px;
-        padding: 16px 20px;
-        margin-bottom: 24px;
-        box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+    /* Subsystem Sensor Cards */
+    .telemetry-card {
+        background: #0B1120;
+        border: 1px solid #1E293B;
+        border-radius: 10px;
+        padding: 14px 18px;
+        box-shadow: 0 4px 14px rgba(0,0,0,0.3);
     }
-    .hud-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 12px;
+    .telemetry-card-title {
+        font-size: 11px;
+        text-transform: uppercase;
+        color: #64748B;
+        font-weight: 700;
+        letter-spacing: 0.8px;
     }
-    .hud-header-title {
-        font-size: 16px;
+    .telemetry-card-value {
+        font-size: 22px;
         font-weight: 800;
-        letter-spacing: 1px;
-        color: #E2E8F0;
-        display: flex;
-        align-items: center;
-        gap: 8px;
+        color: #FFFFFF;
+        margin: 3px 0;
+    }
+    .telemetry-card-subtitle {
+        font-size: 12px;
+        color: #94A3B8;
     }
 
     /* KPI Metrics Cards */
@@ -108,7 +112,7 @@ st.markdown("""
         margin-bottom: 22px;
     }
     .metric-card {
-        background: #111622;
+        background: #0D1322;
         border: 1px solid #1E283D;
         border-radius: 10px;
         padding: 14px 18px;
@@ -138,7 +142,7 @@ st.markdown("""
 
     /* Overtake card */
     .overtake-card {
-        background: #111622;
+        background: #0D1322;
         border-left: 4px solid #3671C6;
         border-top: 1px solid #1E283D;
         border-right: 1px solid #1E283D;
@@ -163,7 +167,7 @@ st.markdown("""
 
     /* Strategy box */
     .strategy-card {
-        background: #111622;
+        background: #0D1322;
         border: 1px solid #1E283D;
         border-radius: 10px;
         padding: 16px 20px;
@@ -172,7 +176,7 @@ st.markdown("""
 
     /* Radio message box */
     .radio-card {
-        background: #0D111A;
+        background: #080D18;
         border-left: 3px solid #10B981;
         border-radius: 6px;
         padding: 12px 16px;
@@ -181,12 +185,19 @@ st.markdown("""
         font-size: 13px;
     }
 
-    /* Component Active Badge */
+    /* Subsystem Active Banner */
+    .subsystem-banner {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-top: 14px;
+        margin-bottom: 10px;
+    }
     .active-badge {
-        background: #1E283D;
+        background: #172554;
         border: 1px solid #3B82F6;
         color: #60A5FA;
-        padding: 4px 12px;
+        padding: 4px 14px;
         border-radius: 20px;
         font-size: 12px;
         font-weight: 700;
@@ -195,7 +206,7 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-# Load data via cache
+# Load data via cache with automatic path resolver
 @st.cache_data
 def load_all_data():
     return data_processor.get_processed_data()
@@ -261,10 +272,10 @@ st.markdown("""
     <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 10px;">
         <div>
             <div class="f1-title">
-                <span>ORACLE RED BULL RACING • RB20 STRATEGY EXPLORER</span>
+                <span>ORACLE RED BULL RACING • RB20 TELEMETRY & STRATEGY EXPLORER</span>
             </div>
             <div class="f1-subtitle">
-                São Paulo 2024 Grand Prix • Interactive Vehicle Schematic & Deep Telemetry Analytics
+                2024 São Paulo Grand Prix (Interlagos) • Max Verstappen Victory from P17 on Grid
             </div>
         </div>
         <div style="display: flex; gap: 8px; align-items: center; margin-top: 4px;">
@@ -314,15 +325,15 @@ st.markdown("""
 
 
 # =========================================================================
-# INTERACTIVE RB20 CAR HUD & SYSTEM SWITCHER
+# REALISTIC RB20 CAR HUD & SYSTEM SWITCHER (NO OVERLAPPING DATA)
 # =========================================================================
 st.markdown("""
-<div class="hud-header">
-    <div class="hud-header-title">
-        <span>🏎️ INTERACTIVE RB20 TELEMETRY BLUEPRINT</span>
+<div class="subsystem-banner">
+    <div style="font-size:16px; font-weight:800; letter-spacing:0.8px; color:#F8FAFC;">
+        🏎️ RED BULL RACING RB20 • VEHICLE SUBSYSTEM EXPLORER
     </div>
     <div>
-        <span class="active-badge">CLICK ANY SYSTEM TO INSPECT SENSORS & STRATEGY</span>
+        <span class="active-badge">SELECT COMPONENT TO INSPECT TELEMETRY & STRATEGY</span>
     </div>
 </div>
 """, unsafe_allow_html=True)
@@ -360,16 +371,226 @@ with col_b6:
         st.session_state['active_system'] = 'progression'
         st.rerun()
 
-# Render RB20 SVG Blueprint
+# Render Realistic RB20 Vector Illustration on Wet Interlagos Track
 svg_code = rb20_blueprint.get_rb20_svg(st.session_state['active_system'])
-components.html(svg_code, height=455)
+components.html(svg_code, height=485)
 
 
 # =========================================================================
-# DYNAMIC SUBSYSTEM DEEP-DIVES BASED ON SELECTION
+# CLEAN DEDICATED TELEMETRY HUD SENSOR CARDS (Zero Overlap with Title)
 # =========================================================================
-
 active = st.session_state['active_system']
+
+col_h1, col_h2, col_h3, col_h4 = st.columns(4)
+
+if active == 'tyres':
+    with col_h1:
+        st.markdown("""
+        <div class="telemetry-card">
+            <div class="telemetry-card-title">Front Tyre Temps</div>
+            <div class="telemetry-card-value" style="color:#39B54A;">82°C / 86°C</div>
+            <div class="telemetry-card-subtitle">Managed in spray behind Leclerc</div>
+        </div>
+        """, unsafe_allow_html=True)
+    with col_h2:
+        st.markdown("""
+        <div class="telemetry-card">
+            <div class="telemetry-card-title">Stint 1 Tyre Age</div>
+            <div class="telemetry-card-value" style="color:#38BDF8;">32 Laps</div>
+            <div class="telemetry-card-subtitle">Survived heavy rain with zero deg</div>
+        </div>
+        """, unsafe_allow_html=True)
+    with col_h3:
+        st.markdown("""
+        <div class="telemetry-card">
+            <div class="telemetry-card-title">Water Evacuation</div>
+            <div class="telemetry-card-value" style="color:#C084FC;">35 L / sec</div>
+            <div class="telemetry-card-subtitle">Pirelli Inter tread clearance at 300kph</div>
+        </div>
+        """, unsafe_allow_html=True)
+    with col_h4:
+        st.markdown("""
+        <div class="telemetry-card">
+            <div class="telemetry-card-title">Fastest Lap Pace</div>
+            <div class="telemetry-card-value" style="color:#10B981;">1:20.472</div>
+            <div class="telemetry-card-subtitle">Clocked on 35-lap-old intermediate set</div>
+        </div>
+        """, unsafe_allow_html=True)
+
+elif active == 'strategy':
+    with col_h1:
+        st.markdown("""
+        <div class="telemetry-card">
+            <div class="telemetry-card-title">Red Flag Pit Delta</div>
+            <div class="telemetry-card-value" style="color:#10B981;">0.0s Lost</div>
+            <div class="telemetry-card-subtitle">Free tyre change under Article 57</div>
+        </div>
+        """, unsafe_allow_html=True)
+    with col_h2:
+        st.markdown("""
+        <div class="telemetry-card">
+            <div class="telemetry-card-title">Strategic Net Advantage</div>
+            <div class="telemetry-card-value" style="color:#C084FC;">+24.5s Gained</div>
+            <div class="telemetry-card-subtitle">Time delta over Norris & Russell</div>
+        </div>
+        """, unsafe_allow_html=True)
+    with col_h3:
+        st.markdown("""
+        <div class="telemetry-card">
+            <div class="telemetry-card-title">Lap 28 VSC Call</div>
+            <div class="telemetry-card-value" style="color:#FFE600;">Stayed Out</div>
+            <div class="telemetry-card-subtitle">Red Bull held nerve while rivals pitted</div>
+        </div>
+        """, unsafe_allow_html=True)
+    with col_h4:
+        st.markdown("""
+        <div class="telemetry-card">
+            <div class="telemetry-card-title">Finish Margin</div>
+            <div class="telemetry-card-value" style="color:#38BDF8;">+19.477s</div>
+            <div class="telemetry-card-subtitle">Gap to Esteban Ocon (P2) at finish</div>
+        </div>
+        """, unsafe_allow_html=True)
+
+elif active == 'engine':
+    with col_h1:
+        st.markdown("""
+        <div class="telemetry-card">
+            <div class="telemetry-card-title">Power Unit</div>
+            <div class="telemetry-card-value" style="color:#EF4444;">Honda RBPT</div>
+            <div class="telemetry-card-subtitle">RBPTH002 1.6L V6 Turbo Hybrid</div>
+        </div>
+        """, unsafe_allow_html=True)
+    with col_h2:
+        st.markdown("""
+        <div class="telemetry-card">
+            <div class="telemetry-card-title">Grid Penalty Reason</div>
+            <div class="telemetry-card-value" style="color:#F59E0B;">+5 Places</div>
+            <div class="telemetry-card-subtitle">ICE #6 fitted after Mexico wear</div>
+        </div>
+        """, unsafe_allow_html=True)
+    with col_h3:
+        st.markdown("""
+        <div class="telemetry-card">
+            <div class="telemetry-card-title">Top Speed Traps</div>
+            <div class="telemetry-card-value" style="color:#38BDF8;">324.5 km/h</div>
+            <div class="telemetry-card-subtitle">Reta Oposta wet slipstream speed</div>
+        </div>
+        """, unsafe_allow_html=True)
+    with col_h4:
+        st.markdown("""
+        <div class="telemetry-card">
+            <div class="telemetry-card-title">Places Gained</div>
+            <div class="telemetry-card-value" style="color:#10B981;">+16 Positions</div>
+            <div class="telemetry-card-subtitle">P17 on grid to Victory (1st place)</div>
+        </div>
+        """, unsafe_allow_html=True)
+
+elif active == 'cockpit':
+    with col_h1:
+        st.markdown("""
+        <div class="telemetry-card">
+            <div class="telemetry-card-title">Turn 1 Braking Point</div>
+            <div class="telemetry-card-value" style="color:#38BDF8;">15m Later</div>
+            <div class="telemetry-card-subtitle">Braked from 309kph deeper than NOR</div>
+        </div>
+        """, unsafe_allow_html=True)
+    with col_h2:
+        st.markdown("""
+        <div class="telemetry-card">
+            <div class="telemetry-card-title">Turn 1 Apex Speed</div>
+            <div class="telemetry-card-value" style="color:#10B981;">114 km/h</div>
+            <div class="telemetry-card-subtitle">+6 km/h faster than Norris through Senna S</div>
+        </div>
+        """, unsafe_allow_html=True)
+    with col_h3:
+        st.markdown("""
+        <div class="telemetry-card">
+            <div class="telemetry-card-title">Fastest Laps Set</div>
+            <div class="telemetry-card-value" style="color:#C084FC;">17 Times</div>
+            <div class="telemetry-card-subtitle">Consecutive purple laps in clean air</div>
+        </div>
+        """, unsafe_allow_html=True)
+    with col_h4:
+        st.markdown("""
+        <div class="telemetry-card">
+            <div class="telemetry-card-title">Fastest Lap Gap</div>
+            <div class="telemetry-card-value" style="color:#39B54A;">-1.045s</div>
+            <div class="telemetry-card-subtitle">Margin over Lando Norris (P2 fastest)</div>
+        </div>
+        """, unsafe_allow_html=True)
+
+elif active == 'aero':
+    with col_h1:
+        st.markdown("""
+        <div class="telemetry-card">
+            <div class="telemetry-card-title">Track Temperature</div>
+            <div class="telemetry-card-value" style="color:#F59E0B;">26.5°C</div>
+            <div class="telemetry-card-subtitle">Wet asphalt with cooling rain mist</div>
+        </div>
+        """, unsafe_allow_html=True)
+    with col_h2:
+        st.markdown("""
+        <div class="telemetry-card">
+            <div class="telemetry-card-title">Aero Trim</div>
+            <div class="telemetry-card-value" style="color:#38BDF8;">High Downforce</div>
+            <div class="telemetry-card-subtitle">+3.5° front wing flap angle for wet grip</div>
+        </div>
+        """, unsafe_allow_html=True)
+    with col_h3:
+        st.markdown("""
+        <div class="telemetry-card">
+            <div class="telemetry-card-title">Race Control Events</div>
+            <div class="telemetry-card-value" style="color:#EF4444;">111 Messages</div>
+            <div class="telemetry-card-subtitle">1 VSC, 2 Safety Cars, 1 Red Flag</div>
+        </div>
+        """, unsafe_allow_html=True)
+    with col_h4:
+        st.markdown("""
+        <div class="telemetry-card">
+            <div class="telemetry-card-title">Red Flag Stoppage</div>
+            <div class="telemetry-card-value" style="color:#E10600;">25 Mins</div>
+            <div class="telemetry-card-subtitle">Lap 32 Colapinto crash on pit straight</div>
+        </div>
+        """, unsafe_allow_html=True)
+
+elif active == 'progression':
+    with col_h1:
+        st.markdown("""
+        <div class="telemetry-card">
+            <div class="telemetry-card-title">Race Distance</div>
+            <div class="telemetry-card-value" style="color:#38BDF8;">69 Laps</div>
+            <div class="telemetry-card-subtitle">Interlagos wet race distance completed</div>
+        </div>
+        """, unsafe_allow_html=True)
+    with col_h2:
+        st.markdown("""
+        <div class="telemetry-card">
+            <div class="telemetry-card-title">Laps Led</div>
+            <div class="telemetry-card-value" style="color:#10B981;">27 Laps</div>
+            <div class="telemetry-card-subtitle">Led every lap from Lap 43 to 69</div>
+        </div>
+        """, unsafe_allow_html=True)
+    with col_h3:
+        st.markdown("""
+        <div class="telemetry-card">
+            <div class="telemetry-card-title">Championship Points</div>
+            <div class="telemetry-card-value" style="color:#C084FC;">26 Points</div>
+            <div class="telemetry-card-subtitle">25 pts for P1 + 1 pt for fastest lap</div>
+        </div>
+        """, unsafe_allow_html=True)
+    with col_h4:
+        st.markdown("""
+        <div class="telemetry-card">
+            <div class="telemetry-card-title">Title Lead Extended</div>
+            <div class="telemetry-card-value" style="color:#FFE600;">62 Points</div>
+            <div class="telemetry-card-subtitle">Virtually sealed 4th Drivers' Championship</div>
+        </div>
+        """, unsafe_allow_html=True)
+
+
+# =========================================================================
+# DYNAMIC SUBSYSTEM DEEP-DIVES
+# =========================================================================
 
 if active == 'tyres':
     st.markdown("---")

@@ -1,10 +1,38 @@
 import json
+import os
 import pandas as pd
 import numpy as np
 
+def resolve_path(filename):
+    """
+    Finds file whether it is located in 'data/<filename>' or in the root directory './<filename>',
+    or relative to the script directory. This prevents FileNotFoundError on Streamlit Cloud.
+    """
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    candidates = [
+        os.path.join(script_dir, 'data', filename),
+        os.path.join(script_dir, filename),
+        os.path.join(os.getcwd(), 'data', filename),
+        os.path.join(os.getcwd(), filename),
+        os.path.join('data', filename),
+        filename
+    ]
+    for path in candidates:
+        if os.path.exists(path):
+            return path
+    # If not found yet, try searching current dir for the filename
+    for root, dirs, files in os.walk(script_dir):
+        if filename in files:
+            return os.path.join(root, filename)
+    return filename
+
+def load_json_file(filename):
+    path = resolve_path(filename)
+    with open(path, encoding='utf-8') as f:
+        return json.load(f)
+
 def get_processed_data():
-    with open('data/drivers.json', encoding='utf-8') as f:
-        drivers = json.load(f)
+    drivers = load_json_file('drivers.json')
     drivers_df = pd.DataFrame(drivers)
     
     # Map driver number to info
@@ -12,25 +40,12 @@ def get_processed_data():
     driver_info_by_id = {}
     
     # Official team colors for 2024 Sao Paulo GP
-    team_colors = {
-        'Red Bull Racing': '#3671C6',
-        'McLaren': '#FF8000',
-        'Mercedes': '#27F4D2',
-        'Alpine': '#0093CC',
-        'Ferrari': '#E8002D',
-        'Aston Martin': '#229971',
-        'RB': '#6692FF',
-        'Haas': '#B6BABD',
-        'Williams': '#64C4FF',
-        'Kick Sauber': '#52E252'
-    }
-
     driver_colors = {
         1: '#3671C6',   # Max Verstappen
         4: '#FF8000',   # Lando Norris
         63: '#27F4D2',  # George Russell
         31: '#0093CC',  # Esteban Ocon
-        10: '#FF69B4',  # Pierre Gasly (Alpine pink accent)
+        10: '#FF69B4',  # Pierre Gasly
         16: '#E8002D',  # Charles Leclerc
         44: '#00A19B',  # Lewis Hamilton
         81: '#FFB800',  # Oscar Piastri
@@ -68,31 +83,23 @@ def get_processed_data():
         else:
             driver_info_by_id[last] = info
 
-    with open('data/laps.json', encoding='utf-8') as f:
-        laps = json.load(f)
+    laps = load_json_file('laps.json')
     laps_df = pd.DataFrame(laps)
 
-    with open('data/stints.json', encoding='utf-8') as f:
-        stints = json.load(f)
+    stints = load_json_file('stints.json')
     stints_df = pd.DataFrame(stints)
 
-    with open('data/pit.json', encoding='utf-8') as f:
-        pit = json.load(f)
+    pit = load_json_file('pit.json')
     pit_df = pd.DataFrame(pit)
 
-    with open('data/race_control.json', encoding='utf-8') as f:
-        race_control = json.load(f)
+    race_control = load_json_file('race_control.json')
     race_control_df = pd.DataFrame(race_control)
 
-    with open('data/weather.json', encoding='utf-8') as f:
-        weather = json.load(f)
+    weather = load_json_file('weather.json')
     weather_df = pd.DataFrame(weather)
 
-    with open('data/lap_positions.json', encoding='utf-8') as f:
-        lap_positions = json.load(f)
-
-    with open('data/telemetry.json', encoding='utf-8') as f:
-        telemetry = json.load(f)
+    lap_positions = load_json_file('lap_positions.json')
+    telemetry = load_json_file('telemetry.json')
 
     # Build comprehensive lap positions dataframe
     pos_records = []

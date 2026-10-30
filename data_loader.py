@@ -1,37 +1,39 @@
 import json
+import os
 import pandas as pd
 import numpy as np
 
+def resolve_path(filename):
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    candidates = [
+        os.path.join(script_dir, 'data', filename),
+        os.path.join(script_dir, filename),
+        os.path.join(os.getcwd(), 'data', filename),
+        os.path.join(os.getcwd(), filename),
+        os.path.join('data', filename),
+        filename
+    ]
+    for path in candidates:
+        if os.path.exists(path):
+            return path
+    for root, dirs, files in os.walk(script_dir):
+        if filename in files:
+            return os.path.join(root, filename)
+    return filename
+
+def load_json(filename):
+    with open(resolve_path(filename), encoding='utf-8') as f:
+        return json.load(f)
+
 def load_data():
-    with open('data/drivers.json', encoding='utf-8') as f:
-        drivers = json.load(f)
-    drivers_df = pd.DataFrame(drivers)
-
-    with open('data/laps.json', encoding='utf-8') as f:
-        laps = json.load(f)
-    laps_df = pd.DataFrame(laps)
-
-    with open('data/stints.json', encoding='utf-8') as f:
-        stints = json.load(f)
-    stints_df = pd.DataFrame(stints)
-
-    with open('data/pit.json', encoding='utf-8') as f:
-        pit = json.load(f)
-    pit_df = pd.DataFrame(pit)
-
-    with open('data/race_control.json', encoding='utf-8') as f:
-        race_control = json.load(f)
-    race_control_df = pd.DataFrame(race_control)
-
-    with open('data/weather.json', encoding='utf-8') as f:
-        weather = json.load(f)
-    weather_df = pd.DataFrame(weather)
-
-    with open('data/lap_positions.json', encoding='utf-8') as f:
-        lap_positions = json.load(f)
-
-    with open('data/telemetry.json', encoding='utf-8') as f:
-        telemetry = json.load(f)
+    drivers_df = pd.DataFrame(load_json('drivers.json'))
+    laps_df = pd.DataFrame(load_json('laps.json'))
+    stints_df = pd.DataFrame(load_json('stints.json'))
+    pit_df = pd.DataFrame(load_json('pit.json'))
+    race_control_df = pd.DataFrame(load_json('race_control.json'))
+    weather_df = pd.DataFrame(load_json('weather.json'))
+    lap_positions = load_json('lap_positions.json')
+    telemetry = load_json('telemetry.json')
 
     return {
         'drivers': drivers_df,
@@ -46,7 +48,4 @@ def load_data():
 
 if __name__ == '__main__':
     d = load_data()
-    print("Drivers:", len(d['drivers']))
-    print("Laps:", len(d['laps']))
-    print("Lap positions laps count:", len(d['lap_positions']))
-    print("Telemetry keys:", list(d['telemetry'].keys()))
+    print("Loaded data successfully. Drivers:", len(d['drivers']), "Laps:", len(d['laps']))
